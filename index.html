@@ -8,7 +8,7 @@
 <meta property="og:description" content="Haldi · Mehendi · Shaadi — join us in New Delhi">
 <meta property="og:image" content="assets/couple.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Great+Vibes&family=Jost:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Great+Vibes&family=Jost:wght@400;500&family=Tiro+Devanagari+Hindi:ital@0;1&display=swap" rel="stylesheet">
 <style>
   :root{
     --maroon:#5a0f12; --maroon-2:#7a1a1d; --gold:#c9a24a; --gold-soft:#e8cf8f;
@@ -88,7 +88,7 @@
   /* ---------- EVENT SECTIONS ---------- */
   .event{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:110px 20px;overflow:hidden}
   .event .card{position:relative;z-index:2;width:min(560px,100%);text-align:center;padding:56px 40px 48px;border-radius:28px}
-  .event .num{font:500 11px var(--sans);letter-spacing:.45em;text-transform:uppercase}
+  .event .quote{font-family:"Tiro Devanagari Hindi","Kohinoor Devanagari","Noto Serif Devanagari",serif;font-size:clamp(17px,2.4vw,21px);line-height:1.7;opacity:.9;max-width:380px;margin:4px auto 0}
   .event h3{font-family:var(--script);font-weight:400;font-size:clamp(72px,12vw,120px);line-height:1;margin:14px 0 6px}
   .event .tag{font-family:var(--serif);font-style:italic;font-size:20px;opacity:.85}
   .event .rule{width:120px;height:1px;margin:28px auto;opacity:.6}
@@ -270,7 +270,7 @@
         <circle r="13" fill="#f26b10"/><circle r="6" fill="#c94a00"/>
       </g>
     </svg>
-    <div class="num">Ceremony · One</div>
+    <div class="quote">हल्दी की रंगत, अपनों का प्यार,<br>शुरू हुआ खुशियों का त्यौहार</div>
     <h3>Haldi</h3>
     <div class="tag">Turmeric, laughter &amp; sunshine</div>
     <div class="rule"></div>
@@ -293,7 +293,7 @@
         <use href="#mp" transform="rotate(180)"/><use href="#mp" transform="rotate(225)"/><use href="#mp" transform="rotate(270)"/><use href="#mp" transform="rotate(315)"/>
       </g>
     </svg>
-    <div class="num">Ceremony · Two</div>
+    <div class="quote">मेहंदी का रंग जितना गहरा,<br>उतना गहरा प्यार</div>
     <h3>Mehendi</h3>
     <div class="tag">Henna, music &amp; a night to dance</div>
     <div class="rule"></div>
@@ -321,7 +321,7 @@
         <rect x="28" y="66" width="24" height="5" rx="2"/>
       </g>
     </svg>
-    <div class="num">Ceremony · Three</div>
+    <div class="quote">सात फेरे, सात वचन,<br>दो दिल, एक जीवन</div>
     <h3>Shaadi</h3>
     <div class="tag">Seven vows, one forever</div>
     <div class="rule"></div>
@@ -368,7 +368,7 @@
   <p>&amp; the Jain and Srivastava families</p>
 </footer>
 
-<audio id="song" src="assets/song.mp3" loop preload="none"></audio>
+<audio id="song" src="assets/song.mp3" loop autoplay preload="auto"></audio>
 <button class="music" id="music" aria-label="Play music"><span class="lbl">PLAY</span><span class="disc"></span></button>
 
 <script>
@@ -415,13 +415,26 @@ for(let i=0;i<18;i++){
   box.appendChild(p);
 }
 
-// Music: plays assets/song.mp3 on tap (browsers block autoplay with sound)
+// Music: try to autoplay on open. If the browser blocks it,
+// start on the guest's first tap/click/key press anywhere on the page.
 const mb = document.getElementById('music'), song = document.getElementById('song');
+let userPaused = false;
 const setUI = on => { mb.classList.toggle('on', on); mb.querySelector('.lbl').textContent = on ? 'PAUSE' : 'PLAY'; };
+song.addEventListener('playing', () => setUI(true));
+song.addEventListener('pause',   () => setUI(false));
+const tryPlay = () => song.play().catch(() => {});
+const kick = ['pointerdown','touchend','keydown'];
+function onFirst(e){
+  if (mb.contains(e.target)) return;          // button handles itself
+  kick.forEach(ev => removeEventListener(ev, onFirst, true));
+  if (!userPaused && song.paused) tryPlay();
+}
+kick.forEach(ev => addEventListener(ev, onFirst, true));
 mb.addEventListener('click', () => {
-  if (song.paused) { song.play().then(() => setUI(true)).catch(() => setUI(false)); }
-  else { song.pause(); setUI(false); }
+  if (song.paused) { userPaused = false; tryPlay(); }
+  else { userPaused = true; song.pause(); }
 });
+tryPlay();
 </script>
 </body>
 </html>
