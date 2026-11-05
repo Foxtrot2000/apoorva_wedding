@@ -85,6 +85,32 @@
   .chip.m{color:var(--mehendi);border-color:#a9c58a;background:#f1f6ea}.chip.m i{background:radial-gradient(#9cc36f,#2f5a2a)}
   .chip.s{color:var(--maroon);border-color:#d9a3a0;background:#fbeeee}.chip.s i{background:radial-gradient(#d9333a,#5a0f12)}
 
+  /* ---------- SCRATCH CARD ---------- */
+  .scratch-hint{font:500 11px var(--sans);letter-spacing:.35em;text-transform:uppercase;color:#6b7a2a;margin:10px 0 26px;transition:opacity .6s}
+  .scratch-wrap{position:relative;width:min(820px,100%);margin:0 auto;border-radius:28px;overflow:hidden;
+                background:#fffdf8;box-shadow:0 24px 60px rgba(90,15,18,.14);border:1px solid #efe2c6}
+  .scratch-content{padding:56px 34px 50px}
+  .scratch-content .h2{margin-top:0}
+  .sc-date{display:inline-block;margin-top:26px;padding:10px 22px;border-radius:999px;border:1px solid var(--gold-soft);
+           font:500 12px var(--sans);letter-spacing:.35em;text-transform:uppercase;color:var(--maroon)}
+  .scratch-wrap canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab;touch-action:none;transition:opacity 1s ease}
+  .scratch-wrap canvas:active{cursor:grabbing}
+  .scratch-wrap.done canvas{opacity:0;pointer-events:none}
+  .skip{margin-top:22px;background:none;border:0;cursor:pointer;color:#8a6a5a;font:400 12px var(--sans);letter-spacing:.08em;
+        text-decoration:underline;text-underline-offset:3px;opacity:0;transition:opacity 1s;pointer-events:none}
+  .skip.show{opacity:.8;pointer-events:auto}
+  .unveil-cue{display:none;margin-top:30px;font:500 11px var(--sans);letter-spacing:.35em;text-transform:uppercase;color:var(--maroon)}
+  .unveil-cue span{display:block;width:12px;height:12px;margin:12px auto 0;border-right:1.5px solid var(--maroon);border-bottom:1.5px solid var(--maroon);
+                   transform:rotate(45deg);animation:bob 1.4s infinite}
+  @keyframes bob{50%{transform:translateY(6px) rotate(45deg)}}
+  .unlocked .unveil-cue{display:block}
+  .unlocked .skip,.unlocked .scratch-hint{display:none}
+  .js body:not(.unlocked) #after{display:none}
+  .js body:not(.unlocked) nav{opacity:0;pointer-events:none}
+  nav{transition:opacity .8s}
+  .burst{position:fixed;inset:0;pointer-events:none;z-index:70;overflow:hidden}
+  .burst .petal{top:-30px}
+
   /* ---------- EVENT SECTIONS ---------- */
   .event{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:110px 20px;overflow:hidden}
   .event .card{position:relative;z-index:2;width:min(560px,100%);text-align:center;padding:56px 40px 48px;border-radius:28px}
@@ -189,6 +215,7 @@
   .js .reveal.in{opacity:1;transform:none}
 
   @media (max-width:720px){
+    .scratch-content{padding:44px 20px 40px}
     nav a{padding:9px 10px;letter-spacing:.14em;font-size:10px}
     .venue-grid{grid-template-columns:1fr}
     .panel{padding:32px 22px}
@@ -240,18 +267,28 @@
   </svg>
 </div>
 
-<!-- INTRO -->
-<section class="intro">
-  <div class="eyebrow reveal">You are invited</div>
-  <h2 class="h2 reveal">Three days of colour &amp; celebration</h2>
-  <p class="lead reveal">Join us as we begin a new chapter — with turmeric and laughter, henna and music, and the sacred pheras under the evening sky.</p>
-  <div class="chips reveal">
-    <a class="chip h" href="#haldi"><i></i>Haldi</a>
-    <a class="chip m" href="#mehendi"><i></i>Mehendi</a>
-    <a class="chip s" href="#shaadi"><i></i>Shaadi</a>
+<!-- INTRO / SCRATCH TO UNVEIL -->
+<section class="intro" id="intro">
+  <div class="eyebrow">You are invited</div>
+  <div class="scratch-hint" id="hint">Gently scratch to unveil</div>
+  <div class="scratch-wrap" id="scratchWrap">
+    <div class="scratch-content">
+      <h2 class="h2">Two days of colour &amp; celebration</h2>
+      <p class="lead">Join us as we begin a new chapter — with turmeric and laughter, henna and music, and the sacred pheras under the evening sky.</p>
+      <div class="sc-date">17 · 18 January 2027</div>
+      <div class="chips">
+        <a class="chip h" href="#haldi"><i></i>Haldi</a>
+        <a class="chip m" href="#mehendi"><i></i>Mehendi</a>
+        <a class="chip s" href="#shaadi"><i></i>Shaadi</a>
+      </div>
+    </div>
+    <canvas id="foil" aria-label="Scratch card – scratch to unveil the invitation"></canvas>
   </div>
+  <button class="skip" id="skip" type="button">Trouble scratching? Tap here to open</button>
+  <div class="unveil-cue" id="cue">Scroll down for the celebrations<span></span></div>
 </section>
 
+<div id="after">
 <!-- HALDI -->
 <section class="event" id="haldi">
   <div class="splash" style="width:260px;height:260px;left:-60px;top:10%"></div>
@@ -367,8 +404,9 @@
   <div class="sig">With love, Apoorva &amp; Armaan</div>
   <p>&amp; the Jain and Srivastava families</p>
 </footer>
+</div><!-- /#after -->
 
-<audio id="song" src="assets/song.mp3" loop autoplay preload="auto"></audio>
+<audio id="song" src="assets/song.mp3" loop preload="auto"></audio>
 <button class="music" id="music" aria-label="Play music"><span class="lbl">PLAY</span><span class="disc"></span></button>
 
 <script>
@@ -415,26 +453,102 @@ for(let i=0;i<18;i++){
   box.appendChild(p);
 }
 
-// Music: try to autoplay on open. If the browser blocks it,
-// start on the guest's first tap/click/key press anywhere on the page.
+// ---------- Music (starts when the guest scratches) ----------
 const mb = document.getElementById('music'), song = document.getElementById('song');
 let userPaused = false;
 const setUI = on => { mb.classList.toggle('on', on); mb.querySelector('.lbl').textContent = on ? 'PAUSE' : 'PLAY'; };
 song.addEventListener('playing', () => setUI(true));
 song.addEventListener('pause',   () => setUI(false));
-const tryPlay = () => song.play().catch(() => {});
-const kick = ['pointerdown','touchend','keydown'];
-function onFirst(e){
-  if (mb.contains(e.target)) return;          // button handles itself
-  kick.forEach(ev => removeEventListener(ev, onFirst, true));
-  if (!userPaused && song.paused) tryPlay();
-}
-kick.forEach(ev => addEventListener(ev, onFirst, true));
+const startMusic = () => { if (!userPaused && song.paused) song.play().catch(() => {}); };
 mb.addEventListener('click', () => {
-  if (song.paused) { userPaused = false; tryPlay(); }
+  if (song.paused) { userPaused = false; song.play().catch(() => {}); }
   else { userPaused = true; song.pause(); }
 });
-tryPlay();
+
+// ---------- Scratch to unveil ----------
+const wrap = document.getElementById('scratchWrap'), cv = document.getElementById('foil'), ctx = cv.getContext('2d');
+let drawnW = 0, scratching = false, last = null, unlocked = false, moves = 0;
+
+function paintFoil(){
+  const r = wrap.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = r.width * dpr; cv.height = r.height * dpr; drawnW = r.width;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.globalCompositeOperation = 'source-over';
+  const W = r.width, H = r.height;
+  // gold foil
+  const g = ctx.createLinearGradient(0,0,W,H);
+  g.addColorStop(0,'#b8862e'); g.addColorStop(.25,'#f3d98b'); g.addColorStop(.5,'#c9a24a');
+  g.addColorStop(.75,'#f6e3a1'); g.addColorStop(1,'#a87822');
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  // kolam pattern
+  ctx.strokeStyle = 'rgba(110,60,10,.18)'; ctx.lineWidth = 1;
+  for (let x = 30; x < W; x += 60) for (let y = 30; y < H; y += 60){
+    ctx.beginPath(); ctx.arc(x,y,14,0,Math.PI*2); ctx.stroke();
+    ctx.save(); ctx.translate(x,y); ctx.rotate(Math.PI/4); ctx.strokeRect(-9,-9,18,18); ctx.restore();
+  }
+  // sparkles
+  for (let k = 0; k < 140; k++){ ctx.fillStyle = 'rgba(255,255,255,' + (Math.random()*.6) + ')';
+    ctx.beginPath(); ctx.arc(Math.random()*W, Math.random()*H, Math.random()*1.6, 0, Math.PI*2); ctx.fill(); }
+  // inner border
+  ctx.strokeStyle = 'rgba(90,15,18,.35)'; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.roundRect ? ctx.roundRect(12,12,W-24,H-24,20) : ctx.rect(12,12,W-24,H-24); ctx.stroke();
+  // text
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#5a0f12';
+  ctx.font = '36px "Tiro Devanagari Hindi", "Kohinoor Devanagari", serif';
+  ctx.fillText('ॐ', W/2, H/2 - 62);
+  const fs = Math.max(26, Math.min(44, W/14));
+  ctx.font = '600 ' + fs + 'px "Cormorant Garamond", Garamond, Georgia, serif';
+  ctx.fillText('SCRATCH  TO  UNVEIL', W/2, H/2);
+  ctx.font = '500 12px Jost, "Helvetica Neue", Arial, sans-serif';
+  ctx.fillText('✦   A P O O R V A   &   A R M A A N   ✦', W/2, H/2 + 46);
+}
+
+function point(e){ const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+function scratch(p){
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.lineWidth = Math.max(44, drawnW / 12); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo((last||p).x, (last||p).y); ctx.lineTo(p.x, p.y); ctx.stroke();
+  last = p;
+  if (++moves % 12 === 0) checkCleared();
+}
+function checkCleared(){
+  const d = ctx.getImageData(0,0,cv.width,cv.height).data; let clear = 0, n = 0;
+  for (let i = 3; i < d.length; i += 4*40){ n++; if (d[i] < 40) clear++; }
+  if (clear / n > .45) unlock();
+}
+cv.addEventListener('pointerdown', e => { scratching = true; last = null; cv.setPointerCapture(e.pointerId); startMusic(); scratch(point(e)); });
+cv.addEventListener('pointermove', e => { if (scratching) scratch(point(e)); });
+['pointerup','pointercancel'].forEach(ev => cv.addEventListener(ev, () => { scratching = false; last = null; startMusic(); }));
+cv.addEventListener('touchend', startMusic, {passive:true});   // iOS: counts as a user gesture
+
+function unlock(){
+  if (unlocked) return; unlocked = true;
+  startMusic();
+  wrap.classList.add('done');
+  document.body.classList.add('unlocked');
+  // re-run reveal + nav observers on the now-visible sections
+  document.querySelectorAll('#after .reveal').forEach(el => io.observe(el));
+  petalBurst();
+}
+document.getElementById('skip').addEventListener('click', unlock);
+setTimeout(() => document.getElementById('skip').classList.add('show'), 8000);
+
+function petalBurst(){
+  const b = document.createElement('div'); b.className = 'burst'; document.body.appendChild(b);
+  const cols = ['#d9333a','#f26b10','#f7a800','#f0a0a0','#e8cf8f'];
+  for (let i = 0; i < 40; i++){
+    const p = document.createElement('div'); p.className = 'petal';
+    p.style.left = Math.random()*100 + '%'; p.style.background = cols[i % cols.length];
+    p.style.animationDuration = (3 + Math.random()*3) + 's'; p.style.animationDelay = (Math.random()*1.2) + 's';
+    b.appendChild(p);
+  }
+  setTimeout(() => b.remove(), 8000);
+}
+
+const ready = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+ready.then(() => { if (!moves) paintFoil(); });
+paintFoil();
+addEventListener('resize', () => { if (!unlocked && Math.abs(wrap.getBoundingClientRect().width - drawnW) > 40) paintFoil(); });
 </script>
 </body>
 </html>
